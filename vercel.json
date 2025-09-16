@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/((?!api|images|_next|favicon.ico|medflow-favicon.ico).*)",
+      "destination": "/index.html"
+    }
+  ]
+}

@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedFlow - Centro de Información</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/images/medflow-favicon.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="/images/medflow-favicon.ico">
+    <link rel="apple-touch-icon" href="/images/medflow-favicon.ico"> 
+     
+    <style>
+        /* ============================================================
+           ESTILOS BASE
+           ============================================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            line-height: 1.6;
+            background: #f8fafc;
+            color: #1e293b;
+            min-height: 100vh;
+        }
+
+        /* ============================================================
+           HEADER - Zona superior con logos y menú hamburguesa
+           ============================================================ */
+        .header {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            justify-self: start;
+        }
+
+        .logo-left img {
+            height: 60px;
+            width: auto;
+            transition: opacity 0.2s ease;
+        }
+
+        .logo-left a:hover img {
+            opacity: 0.8;
+        }
+
+        .logo-right {
+            justify-self: end;
+            height: 60px;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-right img {
+            height: 60px;
+            width: auto;
+            border-radius: 6px;
+        }
+
+        /* ============================================================
+           MENÚ HAMBURGUESA - Solo visible en móviles
+           ============================================================ */
+        .hamburger-menu {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+        }
+
+        .hamburger-button {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+        }
+
+        .hamburger-button:hover {
+            background: #f9fafb;
+            border-color: #2563eb;
+        }
+
+        .hamburger-button.active {
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+
+        .hamburger-icon {
+            width: 20px;
+            height: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .hamburger-icon span {
+            display: block;
+            height: 2px;
+            width: 100%;
+            background: #374151;
+            border-radius: 1px;
+            transition: all 0.2s ease;
+            position: absolute;
+        }
+
+        .hamburger-icon span:nth-child(1) {
+            top: 0;
+        }
+
+        .hamburger-icon span:nth-child(2) {
+            top: 7px;
+        }
+
+        .hamburger-icon span:nth-child(3) {
+            top: 14px;
+        }
+
+        .hamburger-button.active .hamburger-icon span {
+            background: white;
+        }
+
+        .hamburger-button.active .hamburger-icon span:nth-child(1) {
+            top: 7px;
+            transform: rotate(45deg);
+        }
+
+        .hamburger-button.active .hamburger-icon span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-button.active .hamburger-icon span:nth-child(3) {
+            top: 7px;
+            transform: rotate(-45deg);
+        }
+
+        /* Menú desplegable */
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(0,0,0,0.95);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
+
+        .mobile-menu.active {
+            display: flex;
+        }
+
+        .mobile-menu-content {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 90%;
+            width: 320px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .mobile-menu-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .mobile-menu-header h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .mobile-menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .mobile-menu-button {
+            background: #f8fafc;
+            color: #374151;
+            border: 2px solid #e5e7eb;
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.25s ease;
+            text-decoration: none;
+            justify-content: flex-start;
+        }
+
+        .mobile-menu-button:hover {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .mobile-menu-button svg {
+            transition: transform 0.25s ease;
+        }
+
+        .mobile-menu-button:hover svg {
+            transform: translateX(-3px);
+        }
+
+        /* Botones del header - Desktop */
+        .header-center {
+            justify-self: center;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-home {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+
+        .btn-home:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        .btn-back-arrow {
+            background: white;
+            color: #374151;
+            border: 2px solid #e5e7eb;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.25s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .btn-back-arrow:hover {
+            background: #f9fafb;
+            border-color: #2563eb;
+            color: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .btn-back-arrow svg {
+            transition: transform 0.25s ease;
+        }
+
+        .btn-back-arrow:hover svg {
+            transform: translateX(-3px);
+        }
+
+        /* ============================================================
+           BANNER PRINCIPAL - Completamente responsive
+           ============================================================ */
+        .banner {
+            background: linear-gradient(135deg, #1e40af 0%, #059669 100%);
+            color: white;
+            padding: clamp(2rem, 5vw, 3rem) 1rem;
+            position: relative;
+        }
+
+        .banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="%23ffffff" fill-opacity="0.05"><circle cx="30" cy="30" r="1"/></g></svg>') repeat;
+        }
+
+        .banner-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        .disease-badge {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(255,255,255,0.15);
+            padding: clamp(8px, 2vw, 16px) clamp(16px, 4vw, 32px);
+            border-radius: clamp(6px, 1.5vw, 12px);
+            font-size: clamp(0.9rem, 2.5vw, 1.5rem);
+            font-weight: 500;
+            margin-bottom: clamp(1rem, 3vw, 1.5rem);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .banner h1 {
+            font-size: clamp(1.5rem, 4vw, 3.5rem);
+            margin-bottom: clamp(1rem, 3vw, 2rem);
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -1px;
+        }
+
+        .banner p {
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.5;
+            font-weight: 400;
+        }
+
+        /* ============================================================
+           BANNER PROMOCIONAL - Responsive
+           ============================================================ */
+        .promotional-banner {
+            background: #ffffff;
+            padding: clamp(1rem, 3vw, 2rem);
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .promotional-banner-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .promotional-banner img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .promotional-banner img:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .promotional-banner.hidden {
+            display: none;
+        }
+
+        /* ============================================================
+           CONTENIDO PRINCIPAL - Grid completamente responsive
+           ============================================================ */
+        .main-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: clamp(2rem, 5vw, 3rem) clamp(1rem, 3vw, 2rem) clamp(3rem, 6vw, 4rem);
+        }
+
+        .content-header {
+            text-align: center;
+            margin-bottom: clamp(2rem, 5vw, 3rem);
+        }
+
+        .content-header h2 {
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .content-header p {
+            color: #64748b;
+            font-size: clamp(1rem, 2.5vw, 1.1rem);
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 350px), 1fr));
+            gap: clamp(1.5rem, 4vw, 2rem);
+        }
+
+        /* ============================================================
+           TARJETAS DE CONTENIDO - Completamente responsive
+           ============================================================ */
+        .content-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .content-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+        }
+
+        .card-header {
+            padding: clamp(16px, 4vw, 24px);
+            background: #fafbfc;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .content-type {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: clamp(10px, 2.5vw, 12px);
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .type-video {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .type-pdf {
+            background: #dcfce7;
+            color: #059669;
+        }
+
+        .type-infographic {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .type-guide {
+            background: #f3e8ff;
+            color: #7c3aed;
+        }
+
+        .type-presentation {
+            background: #fce7f3;
+            color: #db2777;
+        }
+
+        .type-material {
+            background: #f0f9ff;
+            color: #0284c7;
+        }
+
+        .card-title {
+            font-size: clamp(1.1rem, 3vw, 1.25rem);
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .card-description {
+            color: #64748b;
+            font-size: clamp(12px, 2.5vw, 14px);
+            line-height: 1.5;
+            margin-bottom: 0;
+        }
+
+        /* ============================================================
+           PREVIEW DE CONTENIDO - Responsive
+           ============================================================ */
+        .preview-container {
+            height: clamp(200px, 40vw, 300px);
+            position: relative;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .preview-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+
+        .preview-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #64748b;
+            font-size: clamp(12px, 2.5vw, 14px);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .loading-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #e2e8f0;
+            border-top: 2px solid #2563eb;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ============================================================
+           BOTONES DE ACCIÓN - Responsive
+           ============================================================ */
+        .card-actions {
+            padding: clamp(16px, 4vw, 20px) clamp(16px, 4vw, 24px);
+            background: white;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: clamp(8px, 2vw, 10px) clamp(12px, 3vw, 16px);
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: clamp(12px, 2.5vw, 14px);
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: none;
+            cursor: pointer;
+            flex: 1;
+            justify-content: center;
+            min-width: 120px;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #f8fafc;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #f1f5f9;
+            transform: translateY(-1px);
+        }
+
+        .btn-fullscreen {
+            background: #059669;
+            color: white;
+            min-width: auto;
+            flex: none;
+        }
+
+        .btn-fullscreen:hover {
+            background: #047857;
+        }
+
+        /* ============================================================
+           PÁGINA INDIVIDUAL DE CONTENIDO - Responsive
+           ============================================================ */
+        .individual-content {
+            max-width: 100%;
+            margin: 0;
+            grid-column: 1 / -1;
+        }
+
+        .individual-header {
+            background: white;
+            padding: clamp(16px, 4vw, 20px) clamp(16px, 4vw, 24px);
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .breadcrumb {
+            font-size: clamp(12px, 2.5vw, 14px);
+            color: #64748b;
+        }
+
+        .breadcrumb a {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .individual-preview {
+            height: clamp(400px, 70vh, 80vh);
+            min-height: 400px;
+            background: #f8fafc;
+        }
+
+        .individual-actions {
+            padding: clamp(16px, 4vw, 20px);
+            text-align: center;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        /* ============================================================
+           MODAL DE PANTALLA COMPLETA - Responsive
+           ============================================================ */
+        .fullscreen-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fullscreen-modal.active {
+            display: flex;
+        }
+
+        .fullscreen-content {
+            width: 95%;
+            height: 95%;
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .fullscreen-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+
+        .fullscreen-close {
+            position: absolute;
+            top: clamp(10px, 3vw, 20px);
+            right: clamp(10px, 3vw, 20px);
+            background: rgba(255,255,255,0.9);
+            border: none;
+            width: clamp(36px, 10vw, 44px);
+            height: clamp(36px, 10vw, 44px);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(16px, 4vw, 18px);
+            font-weight: bold;
+            color: #374151;
+            transition: all 0.2s ease;
+            z-index: 1001;
+        }
+
+        .fullscreen-close:hover {
+            background: white;
+            transform: scale(1.1);
+        }
+
+        /* ============================================================
+           ESTADOS VACÍO Y ERROR - Responsive
+           ============================================================ */
+        .empty-state, .error-state {
+            text-align: center;
+            padding: clamp(2rem, 8vw, 4rem) clamp(1rem, 4vw, 2rem);
+            color: #64748b;
+            display: none;
+        }
+
+        .empty-state.active, .error-state.active {
+            display: block;
+        }
+
+        .empty-state-icon, .error-state-icon {
+            width: clamp(48px, 12vw, 64px);
+            height: clamp(48px, 12vw, 64px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: clamp(20px, 5vw, 24px);
+        }
+
+        .empty-state-icon {
+            background: #f1f5f9;
+            color: #94a3b8;
+        }
+
+        .error-state-icon {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .empty-state h3, .error-state h3 {
+            font-size: clamp(1.1rem, 3vw, 1.25rem);
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+
+        .empty-state p, .error-state p {
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
+        }
+
+        /* ============================================================
+           FOOTER - Responsive
+           ============================================================ */
+        .footer {
+            background: #1e293b;
+            color: #94a3b8;
+            text-align: center;
+            padding: clamp(2rem, 5vw, 3rem) clamp(1rem, 3vw, 2rem);
+            margin-top: clamp(2rem, 5vw, 4rem);
+        }
+
+        .footer p {
+            font-size: clamp(12px, 2.5vw, 14px);
+        }
+
+        /* ============================================================
+           MEDIA QUERIES - Responsive breakpoints
+           ============================================================ */
+        
+        /* Tablets y móviles grandes */
+        @media (max-width: 1024px) {
+            .content-grid {
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            }
+        }
+
+        /* Móviles */
+        @media (max-width: 768px) {
+            .header {
+                padding: 0.75rem 1rem;
+            }
+
+            .header-container {
+                grid-template-columns: 1fr 1fr;
+                gap: 0.5rem;
+            }
+
+            .header-center {
+                display: none;
+            }
+
+            .hamburger-menu {
+                display: block;
+            }
+
+            .logo-left img, .logo-right img {
+                height: 45px;
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .card-actions {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .btn {
+                flex: none;
+                width: 100%;
+                min-width: auto;
+            }
+
+            .individual-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .fullscreen-content {
+                width: 98%;
+                height: 98%;
+            }
+        }
+
+        /* Móviles pequeños */
+        @media (max-width: 480px) {
+            .hamburger-menu {
+                top: 15px;
+            }
+
+            .logo-left img, .logo-right img {
+                height: 40px;
+            }
+
+            .preview-container {
+                height: 200px;
+            }
+
+            .mobile-menu-content {
+                padding: 1.5rem;
+                width: 280px;
+            }
+        }
+
+        /* Muy móviles muy pequeños */
+        @media (max-width: 320px) {
+            .main-content {
+                padding: 1.5rem 0.75rem 2rem;
+            }
+
+            .mobile-menu-content {
+                max-width: 95%;
+                width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ============================================================
+         HEADER - Zona de logos
+         ============================================================ -->
+    <header class="header">
+        <div class="header-container">
+            <div class="logo-left">
+                <a href="https://www.medflow.com.mx" target="_blank" rel="noopener noreferrer">
+                    <img src="images/logo-medflow.png" alt="MedFlow" />
+                </a>
+            </div>
+            
+            <!-- Botones del header - Solo desktop -->
+            <div class="header-center">
+                <button class="btn-back-arrow" onclick="goBackToSite()" title="Regresar al Flow">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>Regresar al Flow</span>
+                </button>
+                <button class="btn-home" id="headerHomeBtn" onclick="navigateToHome(event)" style="display: none;">
+                    Inicio
+                </button>
+            </div>
+            
+            <div class="logo-right">
+                <img src="images/Logo_Farmapram_ok.gif" alt="Logo del Cliente" />
+            </div>
+        </div>
+    </header>
+
+    <!-- ============================================================
+         MENÚ HAMBURGUESA - Solo móviles
+         ============================================================ -->
+    <div class="hamburger-menu">
+        <button class="hamburger-button" onclick="toggleMobileMenu()">
+            <div class="hamburger-icon">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </button>
+    </div>
+
+    <!-- Menú móvil desplegable -->
+    <div class="mobile-menu" id="mobileMenu" onclick="closeMobileMenuOnBackdrop(event)">
+        <div class="mobile-menu-content">
+            <div class="mobile-menu-header">
+                <h3>Menú</h3>
+            </div>
+            <div class="mobile-menu-buttons">
+                <button class="mobile-menu-button" onclick="goBackToSite(); closeMobileMenu();">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>Regresar al Flow</span>
+                </button>
+                <button class="mobile-menu-button" id="mobileHomeBtn" onclick="navigateToHome(event); closeMobileMenu();" style="display: none;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>Inicio</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         BANNER PRINCIPAL - Título y nombre de la enfermedad
+         ============================================================ -->
+    <section class="banner">
+        <div class="banner-container">
+            <h1 id="pageTitle">[Ansiedad]</h1>
+            <div class="disease-badge" id="diseaseBadge">
+                <span id="diseaseName">[Ansiedad]</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         BANNER PROMOCIONAL - Imagen promocional opcional
+         ============================================================ -->
+    <section class="promotional-banner" id="promotionalBanner">
+        <div class="promotional-banner-container">
+            <img src="images/Banner_Flow_default_ok.gif" alt="Banner Promocional" id="promotionalBannerImage" />
+        </div>
+    </section>
+
+    <!-- ============================================================
+         CONTENIDO PRINCIPAL - Grid de recursos
+         ============================================================ -->
+    <main class="main-content">
+        <div class="content-header" id="contentHeader">
+            <h2>Recursos Disponibles</h2>
+            <p>Explora todos los materiales educativos y promocionales</p>
+        </div>
+        
+        <div class="content-grid" id="contentGrid">
+            <!-- El contenido se carga dinámicamente aquí -->
+        </div>
+        
+        <div class="empty-state" id="emptyState">
+            <div class="empty-state-icon">📄</div>
+            <h3>No hay contenido disponible</h3>
+            <p>Aún no hay recursos cargados en este centro de información.</p>
+        </div>
+
+        <div class="error-state" id="errorState">
+            <div class="error-state-icon">❌</div>
+            <h3>Contenido no encontrado</h3>
+            <p>El contenido que buscas no existe o ha sido movido.</p>
+            <button class="btn btn-primary" onclick="navigateToHome(event)" style="margin-top: 1rem; max-width: 200px;">
+                Regresar al inicio
+            </button>
+        </div>
+    </main>
+
+    <!-- ============================================================
+         MODAL DE PANTALLA COMPLETA
+         ============================================================ -->
+    <div class="fullscreen-modal" id="fullscreenModal">
+        <button class="fullscreen-close" onclick="closeFullscreen()">×</button>
+        <div class="fullscreen-content">
+            <iframe class="fullscreen-iframe" id="fullscreenIframe" src=""></iframe>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         FOOTER
+         ============================================================ -->
+    <footer class="footer">
+        <p>&copy; 2025 MedFlow. Centro de Información Médica - Recursos para Profesionales de la Salud.</p>
+    </footer>
+
+    <script>
+        /* ============================================================
+           FUNCIONES DEL MENÚ HAMBURGUESA
+           ============================================================ */
+
+        // Alternar menú móvil
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const hamburgerButton = document.querySelector('.hamburger-button');
+            
+            mobileMenu.classList.toggle('active');
+            hamburgerButton.classList.toggle('active');
+            
+            // Prevenir scroll del body cuando el menú está abierto
+            if (mobileMenu.classList.contains('active')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
+            }
+        }
+
+        // Cerrar menú móvil
+        function closeMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const hamburgerButton = document.querySelector('.hamburger-button');
+            
+            mobileMenu.classList.remove('active');
+            hamburgerButton.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Cerrar menú al hacer clic en el backdrop
+        function closeMobileMenuOnBackdrop(event) {
+            if (event.target === document.getElementById('mobileMenu')) {
+                closeMobileMenu();
+            }
+        }
+
+        // Manejar visibilidad del botón de inicio en menú móvil
+        function updateMobileMenuButtons(showHomeButton) {
+            const mobileHomeBtn = document.getElementById('mobileHomeBtn');
+            const headerHomeBtn = document.getElementById('headerHomeBtn');
+            
+            if (showHomeButton) {
+                mobileHomeBtn.style.display = 'flex';
+                headerHomeBtn.style.display = 'flex';
+            } else {
+                mobileHomeBtn.style.display = 'none';
+                headerHomeBtn.style.display = 'none';
+            }
+        }
+
+        /* ============================================================
+           FUNCIONES DE NAVEGACIÓN EXTERNA
+           ============================================================ */
+
+        // Función para regresar al sitio anterior
+        function goBackToSite() {
+            const destinationURL = "https://www.medflow.com.mx/interactive-guides/anxiety";
+            window.location.href = destinationURL;
+        }
+
+        /* ============================================================
+           CONFIGURACIÓN PRINCIPAL DEL SITIO
+           ============================================================ */
+        
+        const DISEASE_CONFIG = {
+            title: "Centro de Información y Promoción", 
+            name: "Ansiedad",
+            content: [
+                            {
+                    title: "Estudio de bioequivalencia en Farmapram®",
+                    description: "Investigación Farmacéutica (IFA Celtics).",
+                    type: "guide",
+                    slug: "ansiolitico-estudio-guide",
+                    url: "https://drive.google.com/file/d/1TnF3wA_nXo1_0u4s7kXEWBgY4ojimt8b/view?usp=drive_link",
+                    previewUrl: "https://drive.google.com/file/d/1TnF3wA_nXo1_0u4s7kXEWBgY4ojimt8b/preview"
+                },  
+            {
+                    title: "Información para la prescripción - Farmapram<sup>®</sup>",
+                    description: "Información completa para la prescripción de Farmapram<sup>®</sup> (Alprazolam).",
+                    type: "guide",
+                    slug: "ansiolitico-dosing-guide",
+                    url: "hhttps://drive.google.com/file/d/1Tv7nlxfDQSm-YiR3iQ3XmIz5SBZBKQI2/view?usp=drive_link",
+                    previewUrl: "https://drive.google.com/file/d/1Tv7nlxfDQSm-YiR3iQ3XmIz5SBZBKQI2/preview"
+                }
+            ]
+        };
+
+        /* ============================================================
+           SISTEMA DE NAVEGACIÓN Y ROUTING
+           ============================================================ */
+
+        function getCurrentSlug() {
+            return window.location.pathname.replace(/^\/+|\/+$/g, '') || null;
+        }
+
+        function updateURL(slug) {
+            const newURL = slug ? `/${slug}` : '/';
+            window.history.pushState({slug: slug}, '', newURL);
+        }
+
+        function findContentBySlug(slug) {
+            if (!slug) return null;
+            const item = DISEASE_CONFIG.content.find(item => item.slug === slug);
+            return item ? { item: item } : null;
+        }
+
+        function togglePromotionalBanner(show) {
+            const banner = document.getElementById('promotionalBanner');
+            const contentHeader = document.getElementById('contentHeader');
+            
+            if (show) {
+                banner.classList.remove('hidden');
+                contentHeader.style.display = 'block';
+                updateMobileMenuButtons(false);
+            } else {
+                banner.classList.add('hidden');
+                contentHeader.style.display = 'none';
+                updateMobileMenuButtons(true);
+            }
+        }
+
+        function showErrorState() {
+            const contentGrid = document.getElementById('contentGrid');
+            const emptyState = document.getElementById('emptyState');
+            const errorState = document.getElementById('errorState');
+            
+            contentGrid.innerHTML = '';
+            emptyState.classList.remove('active');
+            errorState.classList.add('active');
+            togglePromotionalBanner(false);
+        }
+
+        function hideErrorState() {
+            const errorState = document.getElementById('errorState');
+            errorState.classList.remove('active');
+        }
+
+        /* ============================================================
+           FUNCIONES DE MODAL DE PANTALLA COMPLETA
+           ============================================================ */
+
+        function openFullscreen(previewUrl) {
+            const modal = document.getElementById('fullscreenModal');
+            const iframe = document.getElementById('fullscreenIframe');
+            
+            iframe.src = previewUrl;
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeFullscreen() {
+            const modal = document.getElementById('fullscreenModal');
+            const iframe = document.getElementById('fullscreenIframe');
+            
+            modal.classList.remove('active');
+            iframe.src = '';
+            document.body.style.overflow = '';
+        }
+
+        /* ============================================================
+           FUNCIONES DE VISUALIZACIÓN DE CONTENIDO
+           ============================================================ */
+
+        function showIndividualContent(slug) {
+            const contentData = findContentBySlug(slug);
+            if (!contentData) {
+                showErrorState();
+                return;
+            }
+
+            hideErrorState();
+            togglePromotionalBanner(false);
+
+            const { item } = contentData;
+            const contentGrid = document.getElementById('contentGrid');
+            const emptyState = document.getElementById('emptyState');
+            
+            contentGrid.innerHTML = '';
+            emptyState.classList.remove('active');
+
+            const card = document.createElement('div');
+            card.className = 'content-card individual-content';
+            card.innerHTML = `
+                <div class="individual-header">
+                    <div class="breadcrumb">
+                        <a href="/" onclick="navigateToHome(event)">
+                            ← Volver al inicio
+                        </a>
+                    </div>
+                    <div class="content-type type-${item.type}">${item.type}</div>
+                </div>
+                
+                <div>
+                    <h1 style="padding: 24px 24px 12px 24px; font-size: clamp(1.25rem, 4vw, 1.5rem); font-weight: 600; color: #1e293b; margin: 0; background: white; border-bottom: 1px solid #e2e8f0;">${item.title}</h1>
+                    <div class="preview-container individual-preview">
+                        <iframe class="preview-iframe" src="${item.previewUrl}" 
+                                style="border-radius: 0;"
+                                onload="this.style.opacity=1"
+                                onerror="handleIframeError(this)">
+                        </iframe>
+                    </div>
+                    <div class="individual-actions">
+                        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                            <button class="btn btn-fullscreen" onclick="openFullscreen('${item.previewUrl}')">
+                                🔍 Ver en pantalla completa
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            contentGrid.appendChild(card);
+        }
+
+        function handleIframeError(iframe) {
+            console.warn('Error cargando iframe:', iframe.src);
+            iframe.style.display = 'none';
+            const container = iframe.closest('.preview-container');
+            if (container) {
+                container.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #64748b; font-size: clamp(12px, 2.5vw, 14px);">Error cargando el contenido</div>';
+            }
+        }
+
+        function navigateToHome(event) {
+            event.preventDefault();
+            updateURL('');
+            showAllContent();
+        }
+
+        function navigateToContent(slug) {
+            updateURL(slug);
+            showIndividualContent(slug);
+        }
+
+        function showAllContent() {
+            updateURL('');
+            hideErrorState();
+            togglePromotionalBanner(true);
+            
+            const contentGrid = document.getElementById('contentGrid');
+            const emptyState = document.getElementById('emptyState');
+            
+            contentGrid.innerHTML = '';
+            emptyState.classList.remove('active');
+            
+            if (DISEASE_CONFIG.content.length === 0) {
+                emptyState.classList.add('active');
+                return;
+            }
+
+            DISEASE_CONFIG.content.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'content-card';
+                card.innerHTML = `
+                    <div class="card-header">
+                        <div class="content-type type-${item.type}">${item.type}</div>
+                        <h3 class="card-title">${item.title}</h3>
+                        <p class="card-description">${item.description}</p>
+                    </div>
+                    
+                    <div class="preview-container">
+                        <div class="preview-loading">
+                            <div class="loading-spinner"></div>
+                            Cargando preview...
+                        </div>
+                        <iframe class="preview-iframe" 
+                                src="${item.previewUrl}" 
+                                onload="this.style.opacity=1; this.previousElementSibling.style.display='none'" 
+                                onerror="handleIframeError(this)"
+                                style="opacity:0; transition: opacity 0.3s ease;">
+                        </iframe>
+                    </div>
+                    
+                    <div class="card-actions">
+                        <button class="btn btn-primary" onclick="navigateToContent('${item.slug}')">
+                            Ver contenido completo
+                        </button>
+                        <button class="btn btn-fullscreen" onclick="openFullscreen('${item.previewUrl}')" title="Ver en pantalla completa">
+                            Expandir vista
+                        </button>
+                    </div>
+                `;
+                contentGrid.appendChild(card);
+            });
+        }
+
+        /* ============================================================
+           INICIALIZACIÓN Y CONFIGURACIÓN
+           ============================================================ */
+
+        function initializeApp() {
+            setupDiseaseInfo();
+            
+            const currentSlug = getCurrentSlug();
+            
+            if (currentSlug) {
+                showIndividualContent(currentSlug);
+            } else {
+                showAllContent();
+            }
+        }
+
+        function setupDiseaseInfo() {
+            document.getElementById('diseaseName').textContent = DISEASE_CONFIG.name;
+            document.getElementById('pageTitle').textContent = DISEASE_CONFIG.title;
+            document.title = `MedFlow - ${DISEASE_CONFIG.name}`;
+        }
+
+        /* ============================================================
+           EVENT LISTENERS
+           ============================================================ */
+
+        window.addEventListener('popstate', function(event) {
+            const slug = getCurrentSlug();
+            if (slug) {
+                showIndividualContent(slug);
+            } else {
+                showAllContent();
+            }
+        });
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeFullscreen();
+                closeMobileMenu();
+            }
+        });
+
+        document.getElementById('fullscreenModal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeFullscreen();
+            }
+        });
+
+        // Cerrar menú móvil al cambiar orientación
+        window.addEventListener('orientationchange', function() {
+            setTimeout(closeMobileMenu, 500);
+        });
+
+        // Cerrar menú móvil al hacer resize a desktop
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                closeMobileMenu();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+    </script>
+</body>
+</html>
