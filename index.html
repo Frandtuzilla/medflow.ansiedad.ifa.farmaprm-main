@@ -9,7 +9,10 @@
     <link rel="icon" type="image/x-icon" href="/images/medflow-favicon.ico">
     <link rel="shortcut icon" type="image/x-icon" href="/images/medflow-favicon.ico">
     <link rel="apple-touch-icon" href="/images/medflow-favicon.ico"> 
-     
+    
+    <!-- PDF.js CDN para manejo avanzado de PDFs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    
     <style>
         /* ============================================================
            ESTILOS BASE
@@ -510,20 +513,80 @@
         }
 
         /* ============================================================
-           PREVIEW DE CONTENIDO - Responsive
+           PREVIEW DE CONTENIDO - Responsive y mejorado
            ============================================================ */
         .preview-container {
-            height: clamp(200px, 40vw, 300px);
+            height: clamp(250px, 45vw, 350px);
             position: relative;
-            background: #f8fafc;
+            background: #ffffff;
             border-top: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .preview-iframe {
+        .preview-content {
             width: 100%;
             height: 100%;
-            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            padding: 10px;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .preview-pdf-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
             background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .preview-pdf-canvas {
+            max-width: calc(100% - 20px);
+            max-height: calc(100% - 20px);
+            object-fit: contain;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+            border-radius: 4px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+            background: white;
+        }
+
+        /* Vista individual mejorada */
+        .individual-preview {
+            height: clamp(500px, 75vh, 90vh);
+            min-height: 500px;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .individual-preview .preview-pdf-container {
+            padding: 0;
+        }
+
+        .individual-preview .preview-pdf-canvas {
+            max-width: 100%;
+            max-height: 100%;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
         }
 
         .preview-loading {
@@ -665,9 +728,9 @@
         }
 
         /* ============================================================
-           MODAL DE PANTALLA COMPLETA - Responsive
+           VISOR AVANZADO - Modal de pantalla completa con todas las funcionalidades
            ============================================================ */
-        .fullscreen-modal {
+        .advanced-viewer {
             position: fixed;
             top: 0;
             left: 0;
@@ -680,48 +743,155 @@
             justify-content: center;
         }
 
-        .fullscreen-modal.active {
+        .advanced-viewer.active {
             display: flex;
         }
 
-        .fullscreen-content {
+        .viewer-container {
             width: 95%;
             height: 95%;
             position: relative;
+            background: #1f2937;
             border-radius: 8px;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
-        .fullscreen-iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            background: white;
+        /* Barra de herramientas del visor */
+        .viewer-toolbar {
+            background: #374151;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #4b5563;
         }
 
-        .fullscreen-close {
-            position: absolute;
-            top: clamp(10px, 3vw, 20px);
-            right: clamp(10px, 3vw, 20px);
-            background: rgba(255,255,255,0.9);
+        .viewer-title {
+            color: white;
+            font-size: 16px;
+            font-weight: 500;
+            flex: 1;
+            text-align: center;
+            margin: 0 20px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .viewer-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .viewer-btn {
+            background: #4b5563;
             border: none;
-            width: clamp(36px, 10vw, 44px);
-            height: clamp(36px, 10vw, 44px);
-            border-radius: 50%;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: clamp(16px, 4vw, 18px);
-            font-weight: bold;
-            color: #374151;
             transition: all 0.2s ease;
-            z-index: 1001;
+            font-size: 16px;
         }
 
-        .fullscreen-close:hover {
-            background: white;
-            transform: scale(1.1);
+        .viewer-btn:hover {
+            background: #6b7280;
+        }
+
+        .viewer-btn:disabled {
+            background: #374151;
+            color: #6b7280;
+            cursor: not-allowed;
+        }
+
+        .zoom-info {
+            color: #d1d5db;
+            font-size: 12px;
+            margin: 0 8px;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        /* Contenedor principal del visor */
+        .viewer-content {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: #111827;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .viewer-canvas-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .viewer-canvas-container.panning {
+            cursor: grabbing;
+        }
+
+        .viewer-canvas, .viewer-image {
+            max-width: none;
+            max-height: none;
+            transition: transform 0.1s ease;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+        }
+
+        /* Navegación de páginas para PDFs */
+        .page-navigation {
+            background: rgba(0,0,0,0.8);
+            padding: 8px 16px;
+            border-radius: 20px;
+            color: white;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .page-nav-btn {
+            background: #4b5563;
+            border: none;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s ease;
+            font-size: 12px;
+        }
+
+        .page-nav-btn:hover:not(:disabled) {
+            background: #6b7280;
+        }
+
+        .page-nav-btn:disabled {
+            background: #374151;
+            color: #6b7280;
+            cursor: not-allowed;
         }
 
         /* ============================================================
@@ -840,9 +1010,24 @@
                 align-items: flex-start;
             }
 
-            .fullscreen-content {
+            .viewer-container {
                 width: 98%;
                 height: 98%;
+            }
+
+            .viewer-toolbar {
+                padding: 8px 12px;
+            }
+
+            .viewer-title {
+                font-size: 14px;
+                margin: 0 10px;
+            }
+
+            .viewer-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
             }
         }
 
@@ -863,6 +1048,14 @@
             .mobile-menu-content {
                 padding: 1.5rem;
                 width: 280px;
+            }
+
+            .viewer-controls {
+                gap: 4px;
+            }
+
+            .zoom-info {
+                display: none;
             }
         }
 
@@ -951,9 +1144,9 @@
          ============================================================ -->
     <section class="banner">
         <div class="banner-container">
-            <h1 id="pageTitle">[Ansiedad]</h1>
+            <h1 id="pageTitle">Centro de Información y Promoción</h1>
             <div class="disease-badge" id="diseaseBadge">
-                <span id="diseaseName">[Ansiedad]</span>
+                <span id="diseaseName">Ansiedad</span>
             </div>
         </div>
     </section>
@@ -987,7 +1180,7 @@
         </div>
 
         <div class="error-state" id="errorState">
-            <div class="error-state-icon">❌</div>
+            <div class="error-state-icon">⚠</div>
             <h3>Contenido no encontrado</h3>
             <p>El contenido que buscas no existe o ha sido movido.</p>
             <button class="btn btn-primary" onclick="navigateToHome(event)" style="margin-top: 1rem; max-width: 200px;">
@@ -997,12 +1190,50 @@
     </main>
 
     <!-- ============================================================
-         MODAL DE PANTALLA COMPLETA
+         VISOR AVANZADO - Modal de pantalla completa con todas las funcionalidades
          ============================================================ -->
-    <div class="fullscreen-modal" id="fullscreenModal">
-        <button class="fullscreen-close" onclick="closeFullscreen()">×</button>
-        <div class="fullscreen-content">
-            <iframe class="fullscreen-iframe" id="fullscreenIframe" src=""></iframe>
+    <div class="advanced-viewer" id="advancedViewer">
+        <div class="viewer-container">
+            <!-- Barra de herramientas -->
+            <div class="viewer-toolbar">
+                <div class="viewer-controls">
+                    <button class="viewer-btn" onclick="closeAdvancedViewer()" title="Cerrar visor">
+                        ✕
+                    </button>
+                </div>
+                
+                <div class="viewer-title" id="viewerTitle">Documento</div>
+                
+                <div class="viewer-controls">
+                    <button class="viewer-btn" id="zoomOut" onclick="zoomOut()" title="Reducir zoom" disabled>
+                        −
+                    </button>
+                    <div class="zoom-info" id="zoomInfo">100%</div>
+                    <button class="viewer-btn" id="zoomIn" onclick="zoomIn()" title="Aumentar zoom">
+                        +
+                    </button>
+                    <button class="viewer-btn" onclick="resetZoom()" title="Restablecer zoom">
+                        ⟲
+                    </button>
+                    <button class="viewer-btn" onclick="downloadFile()" title="Descargar archivo" id="downloadBtn">
+                        ⬇
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Contenedor principal del visor -->
+            <div class="viewer-content">
+                <div class="viewer-canvas-container" id="viewerCanvasContainer">
+                    <!-- Canvas o imagen se insertan aquí dinámicamente -->
+                </div>
+                
+                <!-- Navegación de páginas (solo para PDFs) -->
+                <div class="page-navigation" id="pageNavigation" style="display: none;">
+                    <button class="page-nav-btn" id="prevPage" onclick="previousPage()" disabled>‹</button>
+                    <span id="pageInfo">Página 1 de 1</span>
+                    <button class="page-nav-btn" id="nextPage" onclick="nextPage()" disabled>›</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1026,7 +1257,6 @@
             mobileMenu.classList.toggle('active');
             hamburgerButton.classList.toggle('active');
             
-            // Prevenir scroll del body cuando el menú está abierto
             if (mobileMenu.classList.contains('active')) {
                 document.body.style.overflow = 'hidden';
             } else {
@@ -1034,7 +1264,6 @@
             }
         }
 
-        // Cerrar menú móvil
         function closeMobileMenu() {
             const mobileMenu = document.getElementById('mobileMenu');
             const hamburgerButton = document.querySelector('.hamburger-button');
@@ -1044,14 +1273,12 @@
             document.body.style.overflow = '';
         }
 
-        // Cerrar menú al hacer clic en el backdrop
         function closeMobileMenuOnBackdrop(event) {
             if (event.target === document.getElementById('mobileMenu')) {
                 closeMobileMenu();
             }
         }
 
-        // Manejar visibilidad del botón de inicio en menú móvil
         function updateMobileMenuButtons(showHomeButton) {
             const mobileHomeBtn = document.getElementById('mobileHomeBtn');
             const headerHomeBtn = document.getElementById('headerHomeBtn');
@@ -1069,38 +1296,53 @@
            FUNCIONES DE NAVEGACIÓN EXTERNA
            ============================================================ */
 
-        // Función para regresar al sitio anterior
         function goBackToSite() {
             const destinationURL = "https://www.medflow.com.mx/interactive-guides/anxiety";
             window.location.href = destinationURL;
         }
 
         /* ============================================================
-           CONFIGURACIÓN PRINCIPAL DEL SITIO
+           CONFIGURACIÓN PRINCIPAL DEL SITIO - ACTUALIZADA PARA VERCEL BLOB
            ============================================================ */
         
         const DISEASE_CONFIG = {
             title: "Centro de Información y Promoción", 
             name: "Ansiedad",
             content: [
-                            {
+                {
                     title: "Estudio de bioequivalencia en Farmapram®",
                     description: "Investigación Farmacéutica (IFA Celtics).",
                     type: "guide",
                     slug: "ansiolitico-estudio-guide",
-                    url: "https://drive.google.com/file/d/1TnF3wA_nXo1_0u4s7kXEWBgY4ojimt8b/view?usp=drive_link",
-                    previewUrl: "https://drive.google.com/file/d/1TnF3wA_nXo1_0u4s7kXEWBgY4ojimt8b/preview"
+                    fileType: "pdf",
+                    url: "https://vuzyy1qwghqmemcj.public.blob.vercel-storage.com/medflow.ansiedad.ifa.farmaprm/Bioequivalencia_Farmapram.pdf",
+                    filename: "Bioequivalencia_Farmapram.pdf"
                 },  
-            {
-                    title: "Información para la prescripción - Farmapram<sup>®</sup>",
-                    description: "Información completa para la prescripción de Farmapram<sup>®</sup> (Alprazolam).",
+                {
+                    title: "Información para la prescripción - Farmapram®",
+                    description: "Información completa para la prescripción de Farmapram® (Alprazolam).",
                     type: "guide",
                     slug: "ansiolitico-dosing-guide",
-                    url: "hhttps://drive.google.com/file/d/1Tv7nlxfDQSm-YiR3iQ3XmIz5SBZBKQI2/view?usp=drive_link",
-                    previewUrl: "https://drive.google.com/file/d/1Tv7nlxfDQSm-YiR3iQ3XmIz5SBZBKQI2/preview"
+                    fileType: "pdf",
+                    url: "https://vuzyy1qwghqmemcj.public.blob.vercel-storage.com/medflow.ansiedad.ifa.farmaprm/IPP_FARMAPRAM_2022.pdf",
+                    filename: "IPP_FARMAPRAM_2022.pdf"
                 }
             ]
         };
+
+        /* ============================================================
+           VARIABLES GLOBALES DEL VISOR AVANZADO
+           ============================================================ */
+        let currentViewerData = null;
+        let currentPdfDoc = null;
+        let currentPageNum = 1;
+        let totalPages = 1;
+        let currentScale = 1;
+        let minScale = 0.25;
+        let maxScale = 3;
+        let isPanning = false;
+        let lastPanPoint = null;
+        let currentTransform = { x: 0, y: 0, scale: 1 };
 
         /* ============================================================
            SISTEMA DE NAVEGACIÓN Y ROUTING
@@ -1153,25 +1395,447 @@
         }
 
         /* ============================================================
-           FUNCIONES DE MODAL DE PANTALLA COMPLETA
+           FUNCIONES DEL VISOR AVANZADO
            ============================================================ */
 
-        function openFullscreen(previewUrl) {
-            const modal = document.getElementById('fullscreenModal');
-            const iframe = document.getElementById('fullscreenIframe');
+        function openAdvancedViewer(item) {
+            currentViewerData = item;
+            const viewer = document.getElementById('advancedViewer');
+            const viewerTitle = document.getElementById('viewerTitle');
+            const downloadBtn = document.getElementById('downloadBtn');
             
-            iframe.src = previewUrl;
-            modal.classList.add('active');
+            viewerTitle.textContent = item.title;
+            downloadBtn.onclick = () => downloadFile();
+            
+            resetViewerState();
+            
+            if (item.fileType === 'pdf') {
+                loadPdfInViewer(item.url);
+            } else if (item.fileType === 'image') {
+                loadImageInViewer(item.url);
+            }
+            
+            viewer.classList.add('active');
             document.body.style.overflow = 'hidden';
         }
 
-        function closeFullscreen() {
-            const modal = document.getElementById('fullscreenModal');
-            const iframe = document.getElementById('fullscreenIframe');
-            
-            modal.classList.remove('active');
-            iframe.src = '';
+        function closeAdvancedViewer() {
+            const viewer = document.getElementById('advancedViewer');
+            viewer.classList.remove('active');
             document.body.style.overflow = '';
+            
+            currentViewerData = null;
+            currentPdfDoc = null;
+            resetViewerState();
+        }
+
+        function resetViewerState() {
+            currentScale = 1;
+            currentPageNum = 1;
+            totalPages = 1;
+            currentTransform = { x: 0, y: 0, scale: 1 };
+            updateZoomInfo();
+            updateZoomButtons();
+            hidePageNavigation();
+        }
+
+        /* ============================================================
+           FUNCIONES DE CARGA DE ARCHIVOS
+           ============================================================ */
+
+        async function loadPdfInViewer(url) {
+            try {
+                showPageNavigation();
+                const container = document.getElementById('viewerCanvasContainer');
+                container.innerHTML = '<div class="preview-loading"><div class="loading-spinner"></div>Cargando PDF...</div>';
+                
+                if (typeof pdfjsLib !== 'undefined') {
+                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                    
+                    const pdf = await pdfjsLib.getDocument(url).promise;
+                    currentPdfDoc = pdf;
+                    totalPages = pdf.numPages;
+                    currentPageNum = 1;
+                    
+                    await renderPdfPage();
+                    updatePageInfo();
+                    updatePageButtons();
+                    setupViewerEvents();
+                }
+            } catch (error) {
+                console.error('Error cargando PDF:', error);
+                showViewerError('Error al cargar el archivo PDF');
+            }
+        }
+
+        async function renderPdfPage() {
+            if (!currentPdfDoc) return;
+            
+            try {
+                const page = await currentPdfDoc.getPage(currentPageNum);
+                const container = document.getElementById('viewerCanvasContainer');
+                
+                const canvas = document.createElement('canvas');
+                canvas.className = 'viewer-canvas';
+                const ctx = canvas.getContext('2d');
+                
+                const containerWidth = container.clientWidth;
+                const containerHeight = container.clientHeight;
+                const viewport = page.getViewport({ scale: 1 });
+                
+                const scaleX = containerWidth / viewport.width;
+                const scaleY = containerHeight / viewport.height;
+                const baseScale = Math.min(scaleX, scaleY) * 0.9;
+                
+                const finalScale = baseScale * currentScale;
+                const scaledViewport = page.getViewport({ scale: finalScale });
+                
+                canvas.width = scaledViewport.width;
+                canvas.height = scaledViewport.height;
+                
+                applyTransform(canvas);
+                
+                const renderContext = {
+                    canvasContext: ctx,
+                    viewport: scaledViewport
+                };
+                
+                container.innerHTML = '';
+                container.appendChild(canvas);
+                
+                await page.render(renderContext).promise;
+                
+            } catch (error) {
+                console.error('Error renderizando página PDF:', error);
+                showViewerError('Error al renderizar la página');
+            }
+        }
+
+        function loadImageInViewer(url) {
+            const container = document.getElementById('viewerCanvasContainer');
+            container.innerHTML = '<div class="preview-loading"><div class="loading-spinner"></div>Cargando imagen...</div>';
+            
+            const img = new Image();
+            img.className = 'viewer-image';
+            img.onload = function() {
+                container.innerHTML = '';
+                container.appendChild(img);
+                setupViewerEvents();
+                applyTransform(img);
+            };
+            img.onerror = function() {
+                showViewerError('Error al cargar la imagen');
+            };
+            img.src = url;
+        }
+
+        function showViewerError(message) {
+            const container = document.getElementById('viewerCanvasContainer');
+            container.innerHTML = `<div style="color: #ef4444; text-align: center; padding: 2rem;">${message}</div>`;
+        }
+
+        /* ============================================================
+           FUNCIONES DE ZOOM Y TRANSFORMACIÓN
+           ============================================================ */
+
+        function zoomIn() {
+            if (currentScale < maxScale) {
+                currentScale = Math.min(currentScale * 1.2, maxScale);
+                updateViewer();
+            }
+        }
+
+        function zoomOut() {
+            if (currentScale > minScale) {
+                currentScale = Math.max(currentScale / 1.2, minScale);
+                updateViewer();
+            }
+        }
+
+        function resetZoom() {
+            currentScale = 1;
+            currentTransform = { x: 0, y: 0, scale: 1 };
+            updateViewer();
+        }
+
+        function updateViewer() {
+            if (currentViewerData) {
+                if (currentViewerData.fileType === 'pdf' && currentPdfDoc) {
+                    renderPdfPage();
+                } else {
+                    const element = document.querySelector('.viewer-image');
+                    if (element) {
+                        applyTransform(element);
+                    }
+                }
+            }
+            updateZoomInfo();
+            updateZoomButtons();
+        }
+
+        function applyTransform(element) {
+            if (element) {
+                const transform = `translate(${currentTransform.x}px, ${currentTransform.y}px) scale(${currentScale})`;
+                element.style.transform = transform;
+            }
+        }
+
+        function updateZoomInfo() {
+            const zoomInfo = document.getElementById('zoomInfo');
+            zoomInfo.textContent = Math.round(currentScale * 100) + '%';
+        }
+
+        function updateZoomButtons() {
+            const zoomInBtn = document.getElementById('zoomIn');
+            const zoomOutBtn = document.getElementById('zoomOut');
+            
+            zoomInBtn.disabled = currentScale >= maxScale;
+            zoomOutBtn.disabled = currentScale <= minScale;
+        }
+
+        /* ============================================================
+           FUNCIONES DE NAVEGACIÓN DE PÁGINAS (PDF)
+           ============================================================ */
+
+        function nextPage() {
+            if (currentPageNum < totalPages) {
+                currentPageNum++;
+                renderPdfPage();
+                updatePageInfo();
+                updatePageButtons();
+            }
+        }
+
+        function previousPage() {
+            if (currentPageNum > 1) {
+                currentPageNum--;
+                renderPdfPage();
+                updatePageInfo();
+                updatePageButtons();
+            }
+        }
+
+        function updatePageInfo() {
+            const pageInfo = document.getElementById('pageInfo');
+            pageInfo.textContent = `Página ${currentPageNum} de ${totalPages}`;
+        }
+
+        function updatePageButtons() {
+            const prevBtn = document.getElementById('prevPage');
+            const nextBtn = document.getElementById('nextPage');
+            
+            prevBtn.disabled = currentPageNum <= 1;
+            nextBtn.disabled = currentPageNum >= totalPages;
+        }
+
+        function showPageNavigation() {
+            const pageNav = document.getElementById('pageNavigation');
+            pageNav.style.display = 'flex';
+        }
+
+        function hidePageNavigation() {
+            const pageNav = document.getElementById('pageNavigation');
+            pageNav.style.display = 'none';
+        }
+
+        /* ============================================================
+           FUNCIONES DE EVENTOS DEL VISOR
+           ============================================================ */
+
+        function setupViewerEvents() {
+            const container = document.getElementById('viewerCanvasContainer');
+            
+            container.addEventListener('mousedown', startPan);
+            document.addEventListener('mousemove', handlePan);
+            document.addEventListener('mouseup', endPan);
+            
+            container.addEventListener('touchstart', handleTouchStart, { passive: false });
+            container.addEventListener('touchmove', handleTouchMove, { passive: false });
+            container.addEventListener('touchend', endPan);
+            
+            container.addEventListener('wheel', handleWheel, { passive: false });
+        }
+
+        function startPan(e) {
+            if (e.button !== 0) return;
+            isPanning = true;
+            lastPanPoint = { x: e.clientX, y: e.clientY };
+            document.getElementById('viewerCanvasContainer').classList.add('panning');
+            e.preventDefault();
+        }
+
+        function handlePan(e) {
+            if (!isPanning) return;
+            
+            const deltaX = e.clientX - lastPanPoint.x;
+            const deltaY = e.clientY - lastPanPoint.y;
+            
+            currentTransform.x += deltaX;
+            currentTransform.y += deltaY;
+            
+            const element = document.querySelector('.viewer-canvas, .viewer-image');
+            if (element) {
+                applyTransform(element);
+            }
+            
+            lastPanPoint = { x: e.clientX, y: e.clientY };
+            e.preventDefault();
+        }
+
+        function endPan() {
+            isPanning = false;
+            lastPanPoint = null;
+            document.getElementById('viewerCanvasContainer').classList.remove('panning');
+        }
+
+        function handleTouchStart(e) {
+            if (e.touches.length === 1) {
+                const touch = e.touches[0];
+                startPan({ button: 0, clientX: touch.clientX, clientY: touch.clientY, preventDefault: e.preventDefault.bind(e) });
+            }
+        }
+
+        function handleTouchMove(e) {
+            if (e.touches.length === 1 && isPanning) {
+                const touch = e.touches[0];
+                handlePan({ clientX: touch.clientX, clientY: touch.clientY, preventDefault: e.preventDefault.bind(e) });
+            }
+        }
+
+        function handleWheel(e) {
+            e.preventDefault();
+            
+            if (e.deltaY < 0) {
+                zoomIn();
+            } else {
+                zoomOut();
+            }
+        }
+
+        /* ============================================================
+           FUNCIÓN DE DESCARGA
+           ============================================================ */
+
+        function downloadFile() {
+            if (currentViewerData) {
+                const link = document.createElement('a');
+                link.href = currentViewerData.url;
+                link.download = currentViewerData.filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+        /* ============================================================
+           FUNCIONES DE PREVIEW EN TARJETAS
+           ============================================================ */
+
+        function createPreviewContent(item) {
+            const previewContainer = document.createElement('div');
+            previewContainer.className = 'preview-container';
+            
+            if (item.fileType === 'image') {
+                previewContainer.innerHTML = `
+                    <div class="preview-content">
+                        <div class="preview-loading">
+                            <div class="loading-spinner"></div>
+                            Cargando preview...
+                        </div>
+                        <img class="preview-image" 
+                             src="${item.url}" 
+                             alt="${item.title}"
+                             onload="this.style.opacity=1; this.parentElement.querySelector('.preview-loading').style.display='none'"
+                             onerror="handlePreviewError(this)"
+                             style="opacity:0; transition: opacity 0.3s ease;"
+                             onclick="openAdvancedViewer(${JSON.stringify(item).replace(/"/g, '&quot;')})">
+                    </div>
+                `;
+            } else if (item.fileType === 'pdf') {
+                previewContainer.innerHTML = `
+                    <div class="preview-content">
+                        <div class="preview-loading">
+                            <div class="loading-spinner"></div>
+                            Cargando preview...
+                        </div>
+                        <div class="preview-pdf-container" id="preview-${item.slug}">
+                            <canvas class="preview-pdf-canvas" 
+                                    onclick="openAdvancedViewer(${JSON.stringify(item).replace(/"/g, '&quot;')})"></canvas>
+                        </div>
+                    </div>
+                `;
+                
+                setTimeout(() => loadPdfPreview(item), 100);
+            }
+            
+            return previewContainer;
+        }
+
+        function handlePreviewError(img) {
+            const container = img.closest('.preview-content');
+            if (container) {
+                container.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #64748b; font-size: 14px;">Error cargando preview</div>';
+            }
+        }
+
+        async function loadPdfPreview(item) {
+            try {
+                const container = document.getElementById(`preview-${item.slug}`);
+                if (!container || typeof pdfjsLib === 'undefined') return;
+                
+                const canvas = container.querySelector('.preview-pdf-canvas');
+                const ctx = canvas.getContext('2d');
+                
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                
+                const pdf = await pdfjsLib.getDocument(item.url).promise;
+                const page = await pdf.getPage(1);
+                
+                // Mejorar la calidad del preview
+                const viewport = page.getViewport({ scale: 1 });
+                const containerWidth = container.clientWidth - 20; // Margen para padding
+                const containerHeight = container.clientHeight - 20; // Margen para padding
+                
+                // Calcular escala para mejor ajuste
+                const scaleX = containerWidth / viewport.width;
+                const scaleY = containerHeight / viewport.height;
+                const scale = Math.min(scaleX, scaleY);
+                
+                // Usar una escala mínima para mejor calidad
+                const finalScale = Math.max(scale, 0.8);
+                const scaledViewport = page.getViewport({ scale: finalScale });
+                
+                // Configurar canvas con resolución mejorada
+                const pixelRatio = window.devicePixelRatio || 1;
+                canvas.width = scaledViewport.width * pixelRatio;
+                canvas.height = scaledViewport.height * pixelRatio;
+                
+                // Ajustar el tamaño visual del canvas
+                canvas.style.width = scaledViewport.width + 'px';
+                canvas.style.height = scaledViewport.height + 'px';
+                
+                // Escalar el contexto para mejor calidad
+                ctx.scale(pixelRatio, pixelRatio);
+                
+                const renderContext = {
+                    canvasContext: ctx,
+                    viewport: scaledViewport
+                };
+                
+                await page.render(renderContext).promise;
+                
+                // Mostrar el canvas y ocultar el loading
+                canvas.style.opacity = '1';
+                const loadingElement = container.parentElement.querySelector('.preview-loading');
+                if (loadingElement) {
+                    loadingElement.style.display = 'none';
+                }
+                
+            } catch (error) {
+                console.error('Error cargando preview PDF:', error);
+                const canvas = container.querySelector('.preview-pdf-canvas');
+                handlePreviewError(canvas);
+            }
         }
 
         /* ============================================================
@@ -1197,6 +1861,7 @@
 
             const card = document.createElement('div');
             card.className = 'content-card individual-content';
+            
             card.innerHTML = `
                 <div class="individual-header">
                     <div class="breadcrumb">
@@ -1209,32 +1874,112 @@
                 
                 <div>
                     <h1 style="padding: 24px 24px 12px 24px; font-size: clamp(1.25rem, 4vw, 1.5rem); font-weight: 600; color: #1e293b; margin: 0; background: white; border-bottom: 1px solid #e2e8f0;">${item.title}</h1>
+                    
                     <div class="preview-container individual-preview">
-                        <iframe class="preview-iframe" src="${item.previewUrl}" 
-                                style="border-radius: 0;"
-                                onload="this.style.opacity=1"
-                                onerror="handleIframeError(this)">
-                        </iframe>
+                        <div class="preview-content">
+                            <div class="preview-loading">
+                                <div class="loading-spinner"></div>
+                                Cargando documento...
+                            </div>
+                            <div class="preview-pdf-container" id="individual-preview-${item.slug}">
+                                <canvas class="preview-pdf-canvas" 
+                                        onclick="openAdvancedViewer(${JSON.stringify(item).replace(/"/g, '&quot;')})"></canvas>
+                            </div>
+                        </div>
                     </div>
+                    
                     <div class="individual-actions">
                         <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-                            <button class="btn btn-fullscreen" onclick="openFullscreen('${item.previewUrl}')">
-                                🔍 Ver en pantalla completa
+                            <button class="btn btn-primary" onclick="openAdvancedViewer(${JSON.stringify(item).replace(/"/g, '&quot;')})">
+                                🔍 Ver en visor avanzado
+                            </button>
+                            <button class="btn btn-secondary" onclick="downloadIndividualFile('${item.url}', '${item.filename}')">
+                                ⬇ Descargar archivo
                             </button>
                         </div>
                     </div>
                 </div>
             `;
+            
             contentGrid.appendChild(card);
+            
+            // Cargar el PDF en la vista individual después de que el elemento esté en el DOM
+            setTimeout(() => {
+                loadIndividualPdfPreview(item);
+            }, 100);
         }
 
-        function handleIframeError(iframe) {
-            console.warn('Error cargando iframe:', iframe.src);
-            iframe.style.display = 'none';
-            const container = iframe.closest('.preview-container');
-            if (container) {
-                container.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #64748b; font-size: clamp(12px, 2.5vw, 14px);">Error cargando el contenido</div>';
+        // Función específica para cargar PDFs en vista individual con mejor calidad
+        async function loadIndividualPdfPreview(item) {
+            try {
+                const container = document.getElementById(`individual-preview-${item.slug}`);
+                if (!container || typeof pdfjsLib === 'undefined') return;
+                
+                const canvas = container.querySelector('.preview-pdf-canvas');
+                const ctx = canvas.getContext('2d');
+                
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                
+                const pdf = await pdfjsLib.getDocument(item.url).promise;
+                const page = await pdf.getPage(1);
+                
+                // Mejor calidad para vista individual
+                const viewport = page.getViewport({ scale: 1 });
+                const containerWidth = container.clientWidth;
+                const containerHeight = container.clientHeight;
+                
+                // Calcular escala para llenar mejor el espacio disponible
+                const scaleX = (containerWidth * 0.95) / viewport.width;
+                const scaleY = (containerHeight * 0.95) / viewport.height;
+                const scale = Math.min(scaleX, scaleY);
+                
+                // Usar escala mínima de 1.2 para vista individual
+                const finalScale = Math.max(scale, 1.2);
+                const scaledViewport = page.getViewport({ scale: finalScale });
+                
+                // Configurar canvas con alta resolución
+                const pixelRatio = window.devicePixelRatio || 1;
+                canvas.width = scaledViewport.width * pixelRatio;
+                canvas.height = scaledViewport.height * pixelRatio;
+                
+                // Ajustar el tamaño visual
+                canvas.style.width = scaledViewport.width + 'px';
+                canvas.style.height = scaledViewport.height + 'px';
+                
+                // Escalar contexto para mejor calidad
+                ctx.scale(pixelRatio, pixelRatio);
+                
+                const renderContext = {
+                    canvasContext: ctx,
+                    viewport: scaledViewport
+                };
+                
+                await page.render(renderContext).promise;
+                
+                // Mostrar canvas y ocultar loading
+                canvas.style.opacity = '1';
+                const loadingElement = container.parentElement.querySelector('.preview-loading');
+                if (loadingElement) {
+                    loadingElement.style.display = 'none';
+                }
+                
+            } catch (error) {
+                console.error('Error cargando PDF individual:', error);
+                const container = document.getElementById(`individual-preview-${item.slug}`);
+                if (container) {
+                    container.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #64748b; font-size: 16px; text-align: center; padding: 20px;">Error al cargar el documento<br><small>Haz clic en "Ver en visor avanzado" para intentar de nuevo</small></div>';
+                }
             }
+        }
+
+        // Función para descargar archivo desde vista individual
+        function downloadIndividualFile(url, filename) {
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         function navigateToHome(event) {
@@ -1267,6 +2012,9 @@
             DISEASE_CONFIG.content.forEach((item, index) => {
                 const card = document.createElement('div');
                 card.className = 'content-card';
+                
+                const previewContainer = createPreviewContent(item);
+                
                 card.innerHTML = `
                     <div class="card-header">
                         <div class="content-type type-${item.type}">${item.type}</div>
@@ -1274,28 +2022,19 @@
                         <p class="card-description">${item.description}</p>
                     </div>
                     
-                    <div class="preview-container">
-                        <div class="preview-loading">
-                            <div class="loading-spinner"></div>
-                            Cargando preview...
-                        </div>
-                        <iframe class="preview-iframe" 
-                                src="${item.previewUrl}" 
-                                onload="this.style.opacity=1; this.previousElementSibling.style.display='none'" 
-                                onerror="handleIframeError(this)"
-                                style="opacity:0; transition: opacity 0.3s ease;">
-                        </iframe>
-                    </div>
-                    
                     <div class="card-actions">
                         <button class="btn btn-primary" onclick="navigateToContent('${item.slug}')">
                             Ver contenido completo
                         </button>
-                        <button class="btn btn-fullscreen" onclick="openFullscreen('${item.previewUrl}')" title="Ver en pantalla completa">
-                            Expandir vista
+                        <button class="btn btn-fullscreen" onclick="openAdvancedViewer(${JSON.stringify(item).replace(/"/g, '&quot;')})" title="Ver en visor avanzado">
+                            🔍 Visor avanzado
                         </button>
                     </div>
                 `;
+                
+                const cardActions = card.querySelector('.card-actions');
+                card.insertBefore(previewContainer, cardActions);
+                
                 contentGrid.appendChild(card);
             });
         }
@@ -1337,23 +2076,21 @@
 
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape') {
-                closeFullscreen();
+                closeAdvancedViewer();
                 closeMobileMenu();
             }
         });
 
-        document.getElementById('fullscreenModal').addEventListener('click', function(event) {
+        document.getElementById('advancedViewer').addEventListener('click', function(event) {
             if (event.target === this) {
-                closeFullscreen();
+                closeAdvancedViewer();
             }
         });
 
-        // Cerrar menú móvil al cambiar orientación
         window.addEventListener('orientationchange', function() {
             setTimeout(closeMobileMenu, 500);
         });
 
-        // Cerrar menú móvil al hacer resize a desktop
         window.addEventListener('resize', function() {
             if (window.innerWidth > 768) {
                 closeMobileMenu();
@@ -1365,4 +2102,4 @@
         });
     </script>
 </body>
-</html>
+</html> 
