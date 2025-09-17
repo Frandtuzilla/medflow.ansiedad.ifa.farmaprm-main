@@ -844,7 +844,7 @@
             cursor: grabbing;
         }
 
-        .viewer-canvas, .viewer-image {
+        .viewer-canvas, .viewer-image, .viewer-video {
             max-width: none;
             max-height: none;
             transition: transform 0.1s ease;
@@ -1224,7 +1224,7 @@
             <!-- Contenedor principal del visor -->
             <div class="viewer-content">
                 <div class="viewer-canvas-container" id="viewerCanvasContainer">
-                    <!-- Canvas o imagen se insertan aquí dinámicamente -->
+                    <!-- Canvas, imagen o video se insertan aquí dinámicamente -->
                 </div>
                 
                 <!-- Navegación de páginas (solo para PDFs) -->
@@ -1326,6 +1326,15 @@
                     fileType: "pdf",
                     url: "https://vuzyy1qwghqmemcj.public.blob.vercel-storage.com/medflow.ansiedad.ifa.farmaprm/IPP_FARMAPRAM_2022.pdf",
                     filename: "IPP_FARMAPRAM_2022.pdf"
+                },
+                {
+                    title: "Video Educativo - Glaukos",
+                    description: "Material audiovisual educativo sobre el procedimiento.",
+                    type: "video",
+                    slug: "glaukos-video",
+                    fileType: "video",
+                    url: "https://vuzyy1qwghqmemcj.public.blob.vercel-storage.com/Glaukos_video1.mp4",
+                    filename: "Glaukos_video1.mp4"
                 }
             ]
         };
@@ -1413,6 +1422,8 @@
                 loadPdfInViewer(item.url);
             } else if (item.fileType === 'image') {
                 loadImageInViewer(item.url);
+            } else if (item.fileType === 'video') {
+                loadVideoInViewer(item.url);
             }
             
             viewer.classList.add('active');
@@ -1527,6 +1538,28 @@
                 showViewerError('Error al cargar la imagen');
             };
             img.src = url;
+        }
+
+        function loadVideoInViewer(url) {
+            const container = document.getElementById('viewerCanvasContainer');
+            container.innerHTML = '<div class="preview-loading"><div class="loading-spinner"></div>Cargando video...</div>';
+            
+            const video = document.createElement('video');
+            video.className = 'viewer-video';
+            video.controls = true;
+            video.style.maxWidth = '100%';
+            video.style.maxHeight = '100%';
+            video.style.objectFit = 'contain';
+            
+            video.onloadeddata = function() {
+                container.innerHTML = '';
+                container.appendChild(video);
+                // Videos don't need the same pan/zoom functionality as images/PDFs
+            };
+            video.onerror = function() {
+                showViewerError('Error al cargar el video');
+            };
+            video.src = url;
         }
 
         function showViewerError(message) {
@@ -1713,27 +1746,14 @@
         }
 
         /* ============================================================
-           FUNCIÓN DE DESCARGA
-           ============================================================ */
-
-        function downloadFile() {
-            if (currentViewerData) {
-                const link = document.createElement('a');
-                link.href = currentViewerData.url;
-                link.download = currentViewerData.filename;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
-        }
-
-        /* ============================================================
            FUNCIONES DE PREVIEW EN TARJETAS
            ============================================================ */
 
         function createPreviewContent(item) {
             const previewContainer = document.createElement('div');
             previewContainer.className = 'preview-container';
+            previewContainer.style.cursor = 'pointer';
+            previewContainer.onclick = () => navigateToContent(item.slug);
             
             if (item.fileType === 'image') {
                 previewContainer.innerHTML = `
@@ -1747,8 +1767,7 @@
                              alt="${item.title}"
                              onload="this.style.opacity=1; this.parentElement.querySelector('.preview-loading').style.display='none'"
                              onerror="handlePreviewError(this)"
-                             style="opacity:0; transition: opacity 0.3s ease;"
-                             onclick="openAdvancedViewer(${JSON.stringify(item).replace(/"/g, '&quot;')})">
+                             style="opacity:0; transition: opacity 0.3s ease;">
                     </div>
                 `;
             } else if (item.fileType === 'pdf') {
@@ -1759,13 +1778,32 @@
                             Cargando preview...
                         </div>
                         <div class="preview-pdf-container" id="preview-${item.slug}">
-                            <canvas class="preview-pdf-canvas" 
-                                    onclick="openAdvancedViewer(${JSON.stringify(item).replace(/"/g, '&quot;')})"></canvas>
+                            <canvas class="preview-pdf-canvas"></canvas>
                         </div>
                     </div>
                 `;
                 
                 setTimeout(() => loadPdfPreview(item), 100);
+            } else if (item.fileType === 'video') {
+                previewContainer.innerHTML = `
+                    <div class="preview-content">
+                        <div class="preview-loading">
+                            <div class="loading-spinner"></div>
+                            Cargando preview...
+                        </div>
+                        <div class="preview-video-container" id="preview-video-${item.slug}">
+                            <video class="preview-video" 
+                                   poster="" 
+                                   preload="metadata"
+                                   style="width: 100%; height: 100%; object-fit: contain; border-radius: 4px;">
+                                <source src="${item.url}" type="video/mp4">
+                                Tu navegador no soporta el elemento video.
+                            </video>
+                        </div>
+                    </div>
+                `;
+                
+                setTimeout(() => loadVideoPreview(item), 100);
             }
             
             return previewContainer;
@@ -1775,6 +1813,38 @@
             const container = img.closest('.preview-content');
             if (container) {
                 container.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #64748b; font-size: 14px;">Error cargando preview</div>';
+            }
+        }
+
+        function loadVideoPreview(item) {
+            try {
+                const container = document.getElementById(`preview-video-${item.slug}`);
+                if (!container) return;
+                
+                const video = container.querySelector('.preview-video');
+                
+                video.onloadeddata = function() {
+                    video.style.opacity = '1';
+                    const loadingElement = container.parentElement.querySelector('.preview-loading');
+                    if (loadingElement) {
+                        loadingElement.style.display = 'none';
+                    }
+                };
+                
+                video.onerror = function() {
+                    container.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #64748b; font-size: 14px;">Error cargando video</div>';
+                };
+                
+                // Set initial opacity to 0, will be set to 1 when loaded
+                video.style.opacity = '0';
+                video.style.transition = 'opacity 0.3s ease';
+                
+            } catch (error) {
+                console.error('Error cargando preview de video:', error);
+                const container = document.getElementById(`preview-video-${item.slug}`);
+                if (container) {
+                    container.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #64748b; font-size: 14px;">Error cargando preview</div>';
+                }
             }
         }
 
@@ -1838,6 +1908,23 @@
             }
         }
 
+        function downloadFile(url, filename) {
+            // If called from advanced viewer, use currentViewerData
+            if (!url && currentViewerData) {
+                url = currentViewerData.url;
+                filename = currentViewerData.filename;
+            }
+            
+            if (url && filename) {
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
         /* ============================================================
            FUNCIONES DE VISUALIZACIÓN DE CONTENIDO
            ============================================================ */
@@ -1893,7 +1980,7 @@
                             <button class="btn btn-primary" onclick="openAdvancedViewer(${JSON.stringify(item).replace(/"/g, '&quot;')})">
                                 🔍 Ver en visor avanzado
                             </button>
-                            <button class="btn btn-secondary" onclick="downloadIndividualFile('${item.url}', '${item.filename}')">
+                            <button class="btn btn-secondary" onclick="downloadFile('${item.url}', '${item.filename}')">
                                 ⬇ Descargar archivo
                             </button>
                         </div>
@@ -1905,7 +1992,9 @@
             
             // Cargar el PDF en la vista individual después de que el elemento esté en el DOM
             setTimeout(() => {
-                loadIndividualPdfPreview(item);
+                if (item.fileType === 'pdf') {
+                    loadIndividualPdfPreview(item);
+                }
             }, 100);
         }
 
@@ -1972,16 +2061,6 @@
             }
         }
 
-        // Función para descargar archivo desde vista individual
-        function downloadIndividualFile(url, filename) {
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
         function navigateToHome(event) {
             event.preventDefault();
             updateURL('');
@@ -2023,11 +2102,8 @@
                     </div>
                     
                     <div class="card-actions">
-                        <button class="btn btn-primary" onclick="navigateToContent('${item.slug}')">
-                            Ver contenido completo
-                        </button>
-                        <button class="btn btn-fullscreen" onclick="openAdvancedViewer(${JSON.stringify(item).replace(/"/g, '&quot;')})" title="Ver en visor avanzado">
-                            🔍 Visor avanzado
+                        <button class="btn btn-primary" onclick="downloadFile('${item.url}', '${item.filename}')" style="flex: 1; min-width: auto;">
+                            ⬇ Descargar archivo
                         </button>
                     </div>
                 `;
@@ -2102,4 +2178,4 @@
         });
     </script>
 </body>
-</html> 
+</html>
